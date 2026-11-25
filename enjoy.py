@@ -35,7 +35,7 @@ def main():
     env = PvZEnv()
     
     # Load your trained brain
-    model = PPO.load("pvz_ai_model_SunflowersLockFix")
+    model = PPO.load("pvz_ai_model_PlantingZones")
 
     obs, info = env.reset()
     

@@ -34,7 +34,7 @@ class PvZEnv(gym.Env):
         self.board_state = np.zeros((5, 9, 3), dtype=np.int32)
         
         # Give the AI starting Sun
-        self.sun_count = np.array([150], dtype=np.int32)
+        self.sun_count = np.array([50], dtype=np.int32)
         
         self.tick_counter = 0
         self.lives = 4
@@ -55,7 +55,7 @@ class PvZEnv(gym.Env):
         
         prices = {1: 50, 2: 100}
         
-        reward = 0.01 # Base Survival Reward
+        reward = 0 # Base Survival Reward
         terminated = False # This tells Gymnasium if the game is over
 
         # AI decision making
@@ -64,10 +64,17 @@ class PvZEnv(gym.Env):
             if plant_id in prices and self.sun_count[0] >= prices[plant_id] and self.board_state[row, col, 0] == 0:
                 self.sun_count[0] -= prices[plant_id]     # Pay the cost
                 self.board_state[row, col, 0] = plant_id  # Place the plant
-                if plant_id == 1:
-                    reward += 0.02 # Reward for successfully planting a Sunflower
-                elif plant_id == 2:
-                    reward += 0.06 # Reward for successfully planting a Peashooter
+
+                if plant_id == 1 and col <= 1:
+                    reward += 0.04
+
+                elif plant_id == 2 and 2 <= col <= 4:
+                    if any(self.board_state[row, i, 1] > 0 for i in range(9)):
+                        reward += 0.4
+                    else:
+                        reward += 0.04
+                else:
+                    reward -= 0.05
 
         elif action_type == 0:
             pass # The AI chose to wait. Do nothing this tick.
@@ -103,12 +110,23 @@ class PvZEnv(gym.Env):
                     
                     # Sunflower generates sun here
                     if sunflower_here:
-                        self.sun_count[0] += 25
+                        self.sun_count[0] += 20
 
         # Zombie Spawning
-        if self.tick_counter % 35 == 0:
-            spawn_row = np.random.randint(0, 5)
-            self.board_state[spawn_row, 8, 1] += 1
+        if self.tick_counter < 50:
+            pass
+        elif self.tick_counter < 200:
+            if self.tick_counter % 35 == 0:
+                spawn_row = np.random.randint(0, 5)
+                self.board_state[spawn_row, 8, 1] += 1
+        elif self.tick_counter < 400:
+            if self.tick_counter % 20 == 0:
+                spawn_row = np.random.randint(0, 5)
+                self.board_state[spawn_row, 8, 1] += 1
+        else:
+            if self.tick_counter % 10 == 0:
+                spawn_row = np.random.randint(0, 5)
+                self.board_state[spawn_row, 8, 1] += 1
 
         # Peashooter Attacks
         if self.tick_counter % 15 == 0:
